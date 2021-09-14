@@ -3,7 +3,6 @@ from discord.ext import commands
 from replit import db
 import time
 import os
-from webserver import keep_alive
 import random
 import json
 from PIL import Image
@@ -1124,8 +1123,7 @@ async def daily(ctx):
     
 
 
-keep_alive()
   
   
 
-client.run(os.getenv('TOKEN'))  
+client.run('TOKEN')
