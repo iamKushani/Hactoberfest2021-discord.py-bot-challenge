@@ -34,11 +34,13 @@ sign up and login
 
 ### Step 2
 Create a new repl 
+
 ![Create_repl](https://media.discordapp.net/attachments/736596667184185524/887264666609393685/unknown.png?width=233&height=182)
 
 
 ### Step 3
 Select Python and Create repl
+
 ![Select_Python](https://media.discordapp.net/attachments/736596667184185524/887265239505207306/unknown.png?width=541&height=396)
 
 ### Step 4 
@@ -84,10 +86,12 @@ and value as token of your bot
 
 ### Step 6
 Replace 
+
 ```py
 client.run
 ```
 with 
+
 ```py
 keep_alive()
   
@@ -103,17 +107,21 @@ from webserver import keep_alive
 ## We've succesfully created a web server 
 
 ### Step 7
+
 Go to [uptimerobott](https://uptimerobot.com/)
 
 Sign Up Login 
 
 add a monitor 
+
 ![add_monitor](https://media.discordapp.net/attachments/736596667184185524/887267831127887903/unknown.png?width=369&height=85)
 
 Copy this link from replit 
+
 ![copy_link](https://media.discordapp.net/attachments/736596667184185524/887268090730131456/unknown.png?width=533&height=314)
 
 Apply these settings and deploy monitor
+
 ![settings](https://media.discordapp.net/attachments/736596667184185524/887268655933554688/unknown.png?width=613&height=303)
 
 # Congratulations you just hosted your bot 24/7
