@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from replit import db
+#from replit import db
 import time
 import os
 import random
@@ -10,7 +10,7 @@ from io import BytesIO
 import traceback
 from datetime import datetime
 from cogs.help import BotHelp
-
+import asyncio
 import aiohttp
 
 def get_prefix(client, message):
@@ -41,11 +41,13 @@ class bot(commands.Bot):
 
 
 
-client = bot(command_prefix = get_prefix, case_insensitive=True)
+client = bot(command_prefix = get_prefix, case_insensitive=True,intents=discord.Intents.all())
 
 blacklisted_words = [' fuck ', ' bitch ', ' prick ', ' cum ',  'pussy ', ' dick ', ' penis ', ' cunt ',' ass ',' asshole ',' nigga ',' chutia ',' chutiya ',' sex ',' porn ',' boob ',' vagina ']
 
 client.help_command=BotHelp()
+
+
 
 
 @client.command()
@@ -76,7 +78,8 @@ async def on_message(msg):
         embed=discord.Embed(title='Bad word usage',description=str(msg.author)+'. Hey, thats a bad word!',color=discord.Colour.red())
         embed.set_thumbnail(url=msg.author.avatar.url)
         await msg.channel.send(embed=embed)
-
+  await client.process_commands(msg)
+'''
   @client.event
   async def on_command_error(ctx, exc):
     if isinstance(exc, commands.CommandOnCooldown):
@@ -93,7 +96,7 @@ async def on_message(msg):
 
 
   await client.process_commands(msg)
-
+'''
 ruleslist = [
     'Must tos follow discord ToS',
     'No Spam or flooding the chat with messages. Do not type in ALL CAPS.',
@@ -108,11 +111,21 @@ ruleslist = [
     'Please avoid Mentioning higher authorities.'
 ]
 
+async def load_cogs():
+  await client.wait_until_ready()
+  cogs=[
+            "cogs.info",
+            "jishaku"
+    ]
+  for i in cogs:
+    client.load_extension(i)
+    print("loaded ",i)
 
 @client.event
 async def on_ready():
   await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='e!help'))
   print("We have logged in as {0.user}".format(client))
+
 
 @client.command()
 async def wanted(ctx,member:discord.Member=None):
@@ -210,14 +223,14 @@ async def warn(ctx,member : discord.Member,*,reason='No reason provided'):
     warning_dict[str(ctx.guild.id)][str(member)] += 1
   with open('.assets/warnings.json','w') as f:
     json.dump(warning_dict, f)
-  
+'''
 @client.command()
 async def warnings(ctx,member:discord.Member):
   
   no_of_warnings = str(db[str(member)])
   embed = discord.Embed(title='Warnings',description=member+ ' has received '+no_of_warnings+' warnings.',color=discord.Colour.gold())
   await ctx.send(embed=embed)
-
+'''
 @client.command()
 @commands.has_permissions(manage_roles=True)
 async def mute(ctx, member:discord.Member,*,reason='No reason provided'):
@@ -1110,4 +1123,6 @@ async def daily(ctx):
     with open('.assets/streak.json','w') as f:
       json.dump(strlist, f)  
 
+
+client.loop.create_task(load_cogs())
 client.run('TOKEN')
