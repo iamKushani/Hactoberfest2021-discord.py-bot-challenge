@@ -85,7 +85,7 @@ class BotHelp(commands.MinimalHelpCommand):
         super().__init__(**options)
 
     def get_command_brief(self, command):
-        return command.help or "No help found (╯°□°）╯︵ ┻━┻."
+        return command.help or "No help found for this."
     
     async def send_bot_help(self, mapping):
         all_commands = list(chain.from_iterable(mapping.values()))
