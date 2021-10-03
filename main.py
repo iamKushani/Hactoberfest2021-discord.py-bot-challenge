@@ -8,46 +8,44 @@ import json
 from PIL import Image
 from io import BytesIO
 import traceback
+from datetime import datetime
+from cogs.help import BotHelp
 
 import aiohttp
 
-def get_prefix(client,message):
-  with open('.assets/prefixes.json') as f:
-    prefixes = json.load(f)
-  if str(message.guild.id) not in prefixes:
-    prefixes[str(message.guild.id)] = 'e!'
-  return prefixes[str(message.guild.id)]
-  with open('.assets/prefixes.json','w') as f:
-    json.dump(prefixes, f)
+def get_prefix(client, message):
+    try:
+        with open('assets/prefixes.json', 'r',encoding='utf8') as r:
+            prefixes = json.load(r)
+            return prefixes[str(message.guild.id)]
+        
+    except KeyError: 
+        with open('assets/prefixes.json', 'r',encoding='utf8') as k:
+            prefixes = json.load(k)
+        prefixes[str(message.guild.id)] = 'e!'
+
+        with open('assets/prefixes.json', 'w',encoding='utf8') as j:
+            j.write(json.dumps(prefixes,indent=4))
+
+        with open('assets/prefixes.json', 'r',encoding='utf8') as t:
+            prefixes = json.load(t)
+            return prefixes[str(message.guild.id)]
+        
+    except: 
+        return 'e!'
+
+class bot(commands.Bot):
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.starttime=datetime.utcnow()
 
 
-client = commands.Bot(command_prefix = get_prefix, case_insensitive=True)
+
+client = bot(command_prefix = get_prefix, case_insensitive=True)
 
 blacklisted_words = [' fuck ', ' bitch ', ' prick ', ' cum ',  'pussy ', ' dick ', ' penis ', ' cunt ',' ass ',' asshole ',' nigga ',' chutia ',' chutiya ',' sex ',' porn ',' boob ',' vagina ']
-client.remove_command('help')
 
-
-
-@client.command(name='help')
-async def help (ctx):
- 
-
-        embed = discord.Embed(
-           title = 'Help',
-           description = 'HELP FOR YOU',
-           colour = discord.Colour.red()
-    )
-
-        embed.set_footer(text=f'Requested by - {ctx.author}',
-icon_url=ctx.author.avatar_url)
-        embed.add_field(name='General' , value='`setprefix`,`hello`,`rule {number}`,`ping`,`calc`,`poll`,whois' , inline=False)
-        embed.add_field(name='Moderation' , value= ' `dm`, `kick`, `ban`, `unban`, `mute`, `unmute`, `warn`, `clear`' , inline=False)
-        embed.add_field(name='Games',value='`howtoplay`,`poke`,`ability`')
-        embed.add_field(name='Settings' , value='`prefix`,`ping`,`servers`' , inline=False)
-        embed.add_field(name='Fun' , value='`worry`,`profpic`,`wanted`,`text`,`curse`,`coinflip`' , inline=False)
-        embed.add_field(name='Economy' , value='`start`,`bal`,`beg`,`jobs`,`apply`,`work`,`deposit`,`withdraw`,`shop`,`buy`,`inventory`,`invest`,`give`,`rob`,`sell`,`chore`,`daily`' , inline=False)
-
-        await ctx.send(embed=embed)
+client.help_command=BotHelp()
 
 
 @client.command()
@@ -68,18 +66,18 @@ async def on_message(msg):
     return
   if 'hack' in msg.content.lower():
      await msg.channel.send("wtf")
-  if msg.author.guild_permissions.manage_guild == True:
-    pass
   else:
     for word in blacklisted_words:
       if word in msg.content.lower():
-        await msg.delete()
+        try:
+          await msg.delete()
+        except:
+          pass
         embed=discord.Embed(title='Bad word usage',description=str(msg.author)+'. Hey, thats a bad word!',color=discord.Colour.red())
-        embed.set_thumbnail(url=msg.author.avatar_url)
+        embed.set_thumbnail(url=msg.author.avatar.url)
         await msg.channel.send(embed=embed)
 
   @client.event
-  
   async def on_command_error(ctx, exc):
     if isinstance(exc, commands.CommandOnCooldown):
       if exc.retry_after > 60 and exc.retry_after < 3600:
@@ -123,7 +121,7 @@ async def wanted(ctx,member:discord.Member=None):
   else:
     user = member
   wanted_img = Image.open('.assets/wanted5.jpg')
-  asset = user.avatar_url_as(size=128)
+  asset = user.avatar.url_as(size=128)
   data = BytesIO(await asset.read())
   pfp = Image.open(data)
   pfp = pfp.resize((111,111))
@@ -138,7 +136,7 @@ async def worry(ctx,member:discord.Member=None):
   else:
     user = member
   wanted_img = Image.open('.assets/worry.jpg')
-  asset = user.avatar_url_as(size=128)
+  asset = user.avatar.url_as(size=128)
   data = BytesIO(await asset.read())
   pfp = Image.open(data)
   pfp = pfp.resize((63,63))
@@ -153,8 +151,8 @@ async def worry(ctx,member:discord.Member=None):
   #else:
     #user = member
   #wanted_img = Image.open('.assets/anime fight.jpg')
-  #asset = user.avatar_url_as(size=128)
-  #author_asset = ctx.message.author.avatar_url_as(size=128)
+  #asset = user.avatar.url_as(size=128)
+  #author_asset = ctx.message.author.avatar.url_as(size=128)
   #data = BytesIO(await asset.read())
   #pfp = Image.open(data)
   #author_data = BytesIO(await author_asset.read())
@@ -213,19 +211,12 @@ async def warn(ctx,member : discord.Member,*,reason='No reason provided'):
   with open('.assets/warnings.json','w') as f:
     json.dump(warning_dict, f)
   
-  
 @client.command()
 async def warnings(ctx,member:discord.Member):
   
   no_of_warnings = str(db[str(member)])
   embed = discord.Embed(title='Warnings',description=member+ ' has received '+no_of_warnings+' warnings.',color=discord.Colour.gold())
   await ctx.send(embed=embed)
-
-
-
-
-
-
 
 @client.command()
 @commands.has_permissions(manage_roles=True)
@@ -313,7 +304,7 @@ async def ping(ctx):
 async def profpic(ctx,member:discord.Member):
   member_name, member_disc = str(member).split('#')
   embed = discord.Embed(title='Profile Picture of '+member_name ,color = discord.Colour.orange())
-  embed.set_image(url=member.avatar_url)
+  embed.set_image(url=member.avatar.url)
   await ctx.send(embed=embed)
 
 @client.command()
@@ -341,7 +332,7 @@ async def poll(ctx,option1,option2,*,question):
   embed.add_field(name='Option 1',value = '```'+str(option1)+'```',inline=True)
   embed.add_field(name='Option 2',value='```'+str(option2)+'```',inline=True)
   sender=str(ctx.message.author)
-  embed.set_footer(text=sender,icon_url=ctx.message.author.avatar_url)
+  embed.set_footer(text=sender,icon_url=ctx.message.author.avatar.url)
   message_ = await channel.send(embed=embed)
   await message_.add_reaction('1️⃣')
   await message_.add_reaction('2️⃣')
@@ -360,7 +351,7 @@ async def whois(ctx,member:discord.Member):
   embed.add_field(name='Nickname',value=str(member.nick),inline=False)
   
   embed.add_field(name='No. of Roles',value=str(len(member.roles)-1),inline=False)
-  embed.set_thumbnail(url=member.avatar_url)
+  embed.set_thumbnail(url=member.avatar.url)
   await ctx.send(embed=embed)
 
 @client.command()
@@ -1117,13 +1108,6 @@ async def daily(ctx):
     with open('.assets/currency.json','w') as f:
       json.dump(data, f)
     with open('.assets/streak.json','w') as f:
-      json.dump(strlist, f)
-
-#rpg game
-    
-
-
-  
-  
+      json.dump(strlist, f)  
 
 client.run('TOKEN')
