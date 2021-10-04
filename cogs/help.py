@@ -3,6 +3,7 @@ from discord import ui
 from discord.ext import menus,commands
 from itertools import starmap,chain
 from utils.views import Delete
+from utils.buttons import LinkButton
 
 class HelpEmbed(discord.Embed): 
     def __init__(self, **kwargs):
@@ -18,6 +19,7 @@ class MyMenuPages(ui.View, menus.MenuPages):
         self.ctx = None
         self.message = None
         self.delete_message_after = delete_message_after
+        self.add_button(LinkButton("Bot invite",))
 
     async def start(self, ctx, *, channel=None, wait=False):
         await self._source._prepare_once()
@@ -102,10 +104,7 @@ class BotHelp(commands.MinimalHelpCommand):
 
         channel = self.get_destination()
         view=Delete(user=self.context.author)
-        msg=await channel.send(embed=embed,view=view)
-        await view.wait()
-        if view.value is True:
-            await msg.delete()
+        await channel.send(embed=embed,view=view)
 
     async def send_help_embed(self, title, description, commands): 
         embed = HelpEmbed(title=title, description=description or "No help found for this.")
@@ -114,7 +113,7 @@ class BotHelp(commands.MinimalHelpCommand):
             for command in filtered_commands:
                 embed.add_field(name=self.get_command_signature(command), value=command.help or "No help found for this.")
            
-        await self.send(embed=embed)
+        await self.context.send(embed=embed,view=Delete(self.context.author))
 
     async def send_group_help(self, group):
         title = self.get_command_signature(group)
@@ -127,14 +126,4 @@ class BotHelp(commands.MinimalHelpCommand):
     async def send_error_message(self, error):
         embed = discord.Embed(title="A new error has appeared!", description=error)
         channel = self.get_destination()
-        await channel.send(embed=embed)
-class Reminderhelp(commands.Cog):
-    def __init__(self,bot):
-        self.bot=bot
-
-    @commands.command()
-    async def help(self,ctx):
-      await ctx.send(f'```Example Command for setting reminder : `remind 10s CP\nFor cancelling reminder : `cancel Number \n1st Argument=Bot-Command\n2nd Argument=Number(without space)s/m/h/d\n3rd Argument=Task```')
-def setup(bot):
-    bot.add_cog(Reminderhelp(bot))
-
+        await channel.send(embed=embed,view=Delete(self.context.author))

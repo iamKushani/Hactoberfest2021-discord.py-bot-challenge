@@ -10,6 +10,7 @@ class Delete(discord.ui.View):
     @discord.ui.button(label="❎",style=discord.ButtonStyle.red)
     async def deletethis(self,button : discord.ui.Button,interaction : discord.Interaction):
         self.value=True
+        await interaction.message.delete()
         self.stop()
 
 
@@ -19,3 +20,4 @@ class Delete(discord.ui.View):
             return False
 
         return True
+

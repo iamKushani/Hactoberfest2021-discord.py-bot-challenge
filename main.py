@@ -12,9 +12,8 @@ from datetime import datetime
 from cogs.help import BotHelp
 import asyncio
 import aiohttp
+from urllib.parse import urlencode
 
-reminders=[]
-a=[]
 def get_prefix(client, message):
     try:
         with open('assets/prefixes.json', 'r',encoding='utf8') as r:
@@ -41,13 +40,27 @@ class bot(commands.Bot):
     super().__init__(*args, **kwargs)
     self.starttime=datetime.utcnow()
 
+  async def get_invite(self):
+    appinfo=await self.application_info()
+    appid=appinfo.id
+    scopes = ('bot', 'applications.commands')
+    query = {
+              "client_id": appid,
+              "scope": "+".join(scopes),
+              "permissions": 8
+          }
+    return f"https://discordapp.com/oauth2/authorize?{urlencode(query, safe='+')}"
+      
 
 
-client = bot(command_prefix = get_prefix, case_insensitive=True)
+
+client = bot(command_prefix = get_prefix, case_insensitive=True,intents=discord.Intents.all())
 
 blacklisted_words = [' fuck ', ' bitch ', ' prick ', ' cum ',  'pussy ', ' dick ', ' penis ', ' cunt ',' ass ',' asshole ',' nigga ',' chutia ',' chutiya ',' sex ',' porn ',' boob ',' vagina ']
 
 client.help_command=BotHelp()
+
+
 
 
 @client.command()
@@ -78,7 +91,8 @@ async def on_message(msg):
         embed=discord.Embed(title='Bad word usage',description=str(msg.author)+'. Hey, thats a bad word!',color=discord.Colour.red())
         embed.set_thumbnail(url=msg.author.avatar.url)
         await msg.channel.send(embed=embed)
-
+  await client.process_commands(msg)
+'''
   @client.event
   async def on_command_error(ctx, exc):
     if isinstance(exc, commands.CommandOnCooldown):
@@ -95,7 +109,7 @@ async def on_message(msg):
 
 
   await client.process_commands(msg)
-
+'''
 ruleslist = [
     'Must tos follow discord ToS',
     'No Spam or flooding the chat with messages. Do not type in ALL CAPS.',
@@ -110,11 +124,21 @@ ruleslist = [
     'Please avoid Mentioning higher authorities.'
 ]
 
+async def load_cogs():
+  await client.wait_until_ready()
+  cogs=[
+            "cogs.info",
+            "jishaku"
+    ]
+  for i in cogs:
+    client.load_extension(i)
+    print("loaded ",i)
 
 @client.event
 async def on_ready():
   await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='e!help'))
   print("We have logged in as {0.user}".format(client))
+
 
 @client.command()
 async def wanted(ctx,member:discord.Member=None):
@@ -212,7 +236,7 @@ async def warn(ctx,member : discord.Member,*,reason='No reason provided'):
     warning_dict[str(ctx.guild.id)][str(member)] += 1
   with open('.assets/warnings.json','w') as f:
     json.dump(warning_dict, f)
-  
+
 @client.command()
 async def warnings(ctx,member:discord.Member):
   
@@ -480,11 +504,6 @@ async def warns(ctx,member:discord.Member):
   await ctx.send(embed=embed)
 
 @client.command()
-async def invite(ctx):
-  embed=discord.Embed(title='Invite Link',description='https://discord.gg/faacUMRYG2.\nThis server is trying to make a record for the most bots in a discord server!\nhttps://discord.gg/QF3ubg38x7\nThis server is mine. Join please!')
-  await ctx.send(embed=embed)
-
-@client.command()
 async def dict(ctx,word):
   URL = 'https://wordsapiv1.p.mashape.com/words/'+str(word)
   async with aiohttp.request('GET', URL, headers={}) as response:
@@ -590,7 +609,7 @@ async def jobs(ctx, page=1):
 
 @client.command()
 @commands.cooldown(1, 1800, commands.BucketType.user)
-async def apply(ctx, job):
+async def apply(ctx, job):  # sourcery no-metrics
   with open('.assets/currency.json','r') as f:
       data = json.load(f)
   if str(ctx.message.author) not in data:
@@ -1112,115 +1131,6 @@ async def daily(ctx):
     with open('.assets/streak.json','w') as f:
       json.dump(strlist, f)  
 
-@client.command()
-async def cancel(ctx,c):
-  cnt=1
-  fa=0
-  h=0
-  if(len(reminders)==0):
-    await ctx.send('**No active reminders**')
-  else:
-    for i in range(len(reminders)):
-      if(reminders[i][0].find(f'{ctx.author}') != -1):
-        if(reminders[i][1]==0 and cnt==int(c)): 
-            reminders[i][1]=1
-            await ctx.send(f"Reminder **{c}** has been cancelled  **{ctx.author.mention}**")
-            h=1
-            return
-        if(reminders[i][1]==1 and cnt==int(c)): 
-            await ctx.send(f'{ctx.author.mention} This Reminder was cancelled already')
-            return
-        cnt=cnt+1
-        fa=1
-    if(fa==0):
-      await ctx.send(f'No Previous Task which belongs to u {ctx.author.mention}')
-    if(h==0):
-      await ctx.send(f'Number you typed is not within the range\nType `show to see the range {ctx.author.mention}')
-@client.command()
-async def show(ctx):
-  cnt=1
-  fa=0
-  h=0
-  await ctx.send(f"Upcoming Reminders for {ctx.author.mention} : \n")
-  if(len(reminders)==0):
-    await ctx.send('**No active reminders**')
-  else:
-    for i in range(len(reminders)):
-      if(h==0):
-        a.append('```')
-        h=1
-      if(reminders[i][0].find(f'{ctx.author}') != -1):
-        if(reminders[i][1]==1): 
-          a.append(f'{cnt}. [cancelled reminder] {reminders[i][0]}')
-          cnt=cnt+1
-          fa=1
-        else: 
-          a.append(f'{cnt}. {reminders[i][0]}')
-          cnt=cnt+1
-          fa=1
-    a.append('```')
-    if(fa==0):
-      await ctx.send('**No active reminders**')
-    else :
-      separator = "\n"
-      await ctx.send(separator.join(map(str, a)))
-    a.clear()
-@client.command()
-async def all(ctx):
-  cnt=1
-  await ctx.send(f"Upcoming Reminders for all : \n")
-  if(len(reminders)==0):
-    await ctx.send('**No active reminders**')
-  else:
-    for i in range(len(reminders)):
-        if(reminders[i][1]==1):
-          if(i==0):
-            a.append('```') 
-          a.append(f'{cnt}. [cancelled reminder] {reminders[i][0]}')
-          if(i==len(reminders)-1):
-            a.append('```') 
-          cnt=cnt+1
-        else:
-          if(i==0):
-            a.append('```') 
-          a.append(f'{cnt}. {reminders[i][0]}')
-          if(i==len(reminders)-1):
-            a.append('```') 
-          cnt=cnt+1
-    separator = "\n"
-    await ctx.send(separator.join(map(str, a)))
-    a.clear()
-@client.command()
-async def remind(ctx, time, *, task):
-    def convert(time):
-      pos = ['s', 'm', 'h', 'd']
-      time_dict = {"s": 1, "m": 60, "h": 3600, "d": 3600*24}
-      unit = time[-1]
-      if unit not in pos:
-        return -1
-      try:
-       val = int(time[:-1])
-      except:
-       return -2
-      return val * time_dict[unit]
-    converted_time=convert(time)
-    if converted_time==-1 or converted_time==-2 :
-      await ctx.send('Get some help...')
-      return
-    await ctx.send(f"Reminder for **{task}** has been started for **{ctx.author.mention}**,time : **{time}**")
-    reminders.append([f"{ctx.author}  task : {task} -- time : {time}",0])
-    await asyncio.sleep(converted_time)
-    fl=0
-    for i in range(len(reminders)):
-      if(reminders[i][0]==f"{ctx.author}  task : {task} -- time : {time}" and reminders[i][1]==0):
-        await ctx.send(f"{ctx.author.mention} Your Reminder : **{task}**")
-        fl=1
-        break
-    if(fl==1):
-      reminders.remove([f"{ctx.author}  task : {task} -- time : {time}",0])
-    else:
-      reminders.remove([f"{ctx.author}  task : {task} -- time : {time}",1])
 
-client.load_extension('cogs.help')
-
+client.loop.create_task(load_cogs())
 client.run('TOKEN')
