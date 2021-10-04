@@ -1,21 +1,12 @@
 # MultiPurpose Discord Bot
 
 ## About
-This bot is made using discord.py, no cogs are used so its beginner friendly.
+This bot is made using discord.py, cogs are being implemented slowly and this repository act as a way to learn all the concepts in discord.py.
+This bot uses the master branch of discord.py github repository.
 
 ## Install Packagaes 
 ```bash
-import discord
-from discord.ext import commands
-import time
-import os
-import random
-import json
-from PIL import Image
-from io import BytesIO
-import traceback
-
-import aiohttp
+pip install -r requirements.txt
 ```
 
 ## How to use ? 

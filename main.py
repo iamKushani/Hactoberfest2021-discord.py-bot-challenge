@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-#from replit import db
+from replit import db
 import time
 import os
 import random
@@ -12,6 +12,7 @@ from datetime import datetime
 from cogs.help import BotHelp
 import asyncio
 import aiohttp
+from urllib.parse import urlencode
 
 def get_prefix(client, message):
     try:
@@ -38,6 +39,18 @@ class bot(commands.Bot):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.starttime=datetime.utcnow()
+
+  async def get_invite(self):
+    appinfo=await self.application_info()
+    appid=appinfo.id
+    scopes = ('bot', 'applications.commands')
+    query = {
+              "client_id": appid,
+              "scope": "+".join(scopes),
+              "permissions": 8
+          }
+    return f"https://discordapp.com/oauth2/authorize?{urlencode(query, safe='+')}"
+      
 
 
 
@@ -223,14 +236,14 @@ async def warn(ctx,member : discord.Member,*,reason='No reason provided'):
     warning_dict[str(ctx.guild.id)][str(member)] += 1
   with open('.assets/warnings.json','w') as f:
     json.dump(warning_dict, f)
-'''
+
 @client.command()
 async def warnings(ctx,member:discord.Member):
   
   no_of_warnings = str(db[str(member)])
   embed = discord.Embed(title='Warnings',description=member+ ' has received '+no_of_warnings+' warnings.',color=discord.Colour.gold())
   await ctx.send(embed=embed)
-'''
+
 @client.command()
 @commands.has_permissions(manage_roles=True)
 async def mute(ctx, member:discord.Member,*,reason='No reason provided'):
@@ -491,11 +504,6 @@ async def warns(ctx,member:discord.Member):
   await ctx.send(embed=embed)
 
 @client.command()
-async def invite(ctx):
-  embed=discord.Embed(title='Invite Link',description='https://discord.gg/faacUMRYG2.\nThis server is trying to make a record for the most bots in a discord server!\nhttps://discord.gg/QF3ubg38x7\nThis server is mine. Join please!')
-  await ctx.send(embed=embed)
-
-@client.command()
 async def dict(ctx,word):
   URL = 'https://wordsapiv1.p.mashape.com/words/'+str(word)
   async with aiohttp.request('GET', URL, headers={}) as response:
@@ -601,7 +609,7 @@ async def jobs(ctx, page=1):
 
 @client.command()
 @commands.cooldown(1, 1800, commands.BucketType.user)
-async def apply(ctx, job):
+async def apply(ctx, job):  # sourcery no-metrics
   with open('.assets/currency.json','r') as f:
       data = json.load(f)
   if str(ctx.message.author) not in data:

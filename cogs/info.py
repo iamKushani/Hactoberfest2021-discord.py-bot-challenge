@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 from utils.views import Delete
+from utils.buttons import LinkButton
 
 class Informative(commands.Cog):
     def __init__(self,client):
@@ -17,10 +18,8 @@ class Informative(commands.Cog):
         embed=discord.Embed(title="Bot's uptime",description="Bot has been running for {}d {}h {}m {}s".format(elapsed.days, hours, minutes, seconds))
         embed.set_footer(text=f"Requested by {ctx.author}",icon_url=ctx.author.avatar.url)
         view=Delete(ctx.author)
-        msg=await ctx.send(embed=embed,view=view)
-        await view.wait()
-        if view.value is True:
-            await msg.delete()
+        await ctx.send(embed=embed,view=view)
+
 
     @commands.command()
     async def userinfo(self,ctx, user: discord.Member = None): 
@@ -51,10 +50,18 @@ class Informative(commands.Cog):
         embed.add_field(name="Guild permissions", value=perm_string, inline=False)
         embed.set_footer(text='ID: ' + str(user.id))
         view=Delete(ctx.author)
-        msg=await ctx.send(embed=embed,view=view)
-        await view.wait()
-        if view.value is True:
-            await msg.delete()
+        await ctx.send(embed=embed,view=view)
+
+    @commands.command(name="invite")
+    async def invite(self,ctx):
+        inv=await self.client.get_invite()
+        view=discord.ui.View()
+        view.add_item(LinkButton("Invite link",url=inv))
+        embed=discord.Embed(title="Bot invite",description="Click on the button below to invite me.")
+        embed.set_footer(text=f"Requested by {ctx.author}",icon_url=ctx.author.avatar.url)
+        embed.set_thumbnail(url=ctx.me.avatar.url)
+        await ctx.send(embed=embed,view=view)
+
 
 def setup(client):
     client.add_cog(Informative(client))
