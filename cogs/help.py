@@ -128,3 +128,13 @@ class BotHelp(commands.MinimalHelpCommand):
         embed = discord.Embed(title="A new error has appeared!", description=error)
         channel = self.get_destination()
         await channel.send(embed=embed)
+class Reminderhelp(commands.Cog):
+    def __init__(self,bot):
+        self.bot=bot
+
+    @commands.command()
+    async def help(self,ctx):
+      await ctx.send(f'```Example Command for setting reminder : `remind 10s CP\nFor cancelling reminder : `cancel Number \n1st Argument=Bot-Command\n2nd Argument=Number(without space)s/m/h/d\n3rd Argument=Task```')
+def setup(bot):
+    bot.add_cog(Reminderhelp(bot))
+
