@@ -65,7 +65,8 @@ async def load_cogs():
   cogs=[
             "cogs.info",
             "cogs.general",
-            "cogs.errors"
+            "cogs.errors",
+            "cogs.api",
             "jishaku"
     ]
   for i in cogs:
@@ -332,24 +333,6 @@ async def profpic(ctx,member:discord.Member):
   member_name, member_disc = str(member).split('#')
   embed = discord.Embed(title='Profile Picture of '+member_name ,color = discord.Colour.orange())
   embed.set_image(url=member.avatar.url)
-  await ctx.send(embed=embed)
-
-@client.command()
-async def calc(ctx,num1,sign,num2):
-  if str(sign) == '+':
-    ans = int(num1) + int(num2)
-  if str(sign) == '-':
-    ans = int(num1) - int(num2)
-  if str(sign) == '*':
-    ans = int(num1) * int(num2)
-  if str(sign) == '/':
-    ans = int(num1) / int(num2)
-  string_ans = '```' + str(ans) + '```'
-  embed = discord.Embed(title='Calculator',color=discord.Colour.blurple())
-  calc_string = '```'+str(num1) + ' ' + str(sign) + ' ' + str(num2)+'```'
-  embed.add_field(name='Sum',value=str(calc_string),inline=False)
-  
-  embed.add_field(name='Answer',value=str(string_ans),inline=False)
   await ctx.send(embed=embed)
 
 @client.command()

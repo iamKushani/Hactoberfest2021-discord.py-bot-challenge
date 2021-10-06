@@ -21,3 +21,18 @@ class Delete(discord.ui.View):
 
         return True
 
+class Save(discord.ui.View):
+    def __init__(self,user):
+        super().__init__()
+        self.user=user
+
+    @discord.ui.button(label="Save?",style=discord.ButtonStyle.green)
+    async def save(self,button:discord.ui.Button,interaction:discord.Interaction):
+        msg=interaction.message
+        try:
+            await self.user.send(msg.embeds[0].image.url)
+        except:
+            await interaction.response.send_message("Your dms are not open, so I am unable to send this to you.",ephemeral=True)
+        else:
+            self.stop()
+        
