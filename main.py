@@ -60,7 +60,17 @@ blacklisted_words = [' fuck ', ' bitch ', ' prick ', ' cum ',  'pussy ', ' dick 
 
 client.help_command=BotHelp()
 
-
+async def load_cogs():
+  await client.wait_until_ready()
+  cogs=[
+            "cogs.info",
+            "cogs.general",
+            "cogs.errors"
+            "jishaku"
+    ]
+  for i in cogs:
+    client.load_extension(i)
+    print("loaded ",i)
 
 
 @client.command()
@@ -123,16 +133,6 @@ ruleslist = [
     'Do not argue with staff. Decisions are final.',
     'Please avoid Mentioning higher authorities.'
 ]
-
-async def load_cogs():
-  await client.wait_until_ready()
-  cogs=[
-            "cogs.info",
-            "jishaku"
-    ]
-  for i in cogs:
-    client.load_extension(i)
-    print("loaded ",i)
 
 @client.event
 async def on_ready():
@@ -243,6 +243,7 @@ async def warnings(ctx,member:discord.Member):
   no_of_warnings = str(db[str(member)])
   embed = discord.Embed(title='Warnings',description=member+ ' has received '+no_of_warnings+' warnings.',color=discord.Colour.gold())
   await ctx.send(embed=embed)
+
 
 @client.command()
 @commands.has_permissions(manage_roles=True)
@@ -362,23 +363,6 @@ async def poll(ctx,option1,option2,*,question):
   message_ = await channel.send(embed=embed)
   await message_.add_reaction('1️⃣')
   await message_.add_reaction('2️⃣')
-
-@client.command()
-async def whois(ctx,member:discord.Member):
-  join_date, join_ip = str(member.joined_at).split('.')
-  create_date, create_ip = str(member.created_at).split('.')
-  member_name,member_disc = str(member).split('#')
-  
-  embed = discord.Embed(title = 'Who is '+str(member_name)+'?',color=discord.Colour.blurple())
-  embed.add_field(name='Tag',value=str(member_disc),inline=False)
-  embed.add_field(name='ID',value=str(member.id),inline=False)
-  embed.add_field(name='Account Creation Date',value=str(create_date),inline=False)
-  embed.add_field(name='Server Join Date',value=str(join_date),inline=False)
-  embed.add_field(name='Nickname',value=str(member.nick),inline=False)
-  
-  embed.add_field(name='No. of Roles',value=str(len(member.roles)-1),inline=False)
-  embed.set_thumbnail(url=member.avatar.url)
-  await ctx.send(embed=embed)
 
 @client.command()
 async def coinflip(ctx):
