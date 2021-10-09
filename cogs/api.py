@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import aiohttp
 from utils.views import Save
+import urllib
 
 class ApiCommands(commands.Cog):
     def __init__(self,client):
@@ -30,13 +31,6 @@ class ApiCommands(commands.Cog):
             embed.set_image(url=dogjson['link']) 
             embed.set_footer(text=factjson['fact'])
             await ctx.send(embed=embed,view=Save(ctx.author))
-
-    @commands.command(name="httpcat",help="Returns a http status code cat picture based on the code you send or a random one if you don't provide a code.")
-    async def httpcat(self,ctx,code:int):
-        url="https://http.cat/"+str(code)
-        embed=discord.Embed(title="HTTP cat",description="Your requested http cat.Remember, only a part of valid status codes have http cats, others don't have.")
-        embed.set_image(url=url)
-        await ctx.send(embed=embed,view=Save(ctx.author))
 
 def setup(client):
     client.add_cog(ApiCommands(client))
