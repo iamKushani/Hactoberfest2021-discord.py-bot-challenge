@@ -1,13 +1,17 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands,menus
+from discord import ui
+from itertools import starmap,chain
 from datetime import datetime
 from utils.views import Delete
 from utils.buttons import LinkButton
 
+
 class Informative(commands.Cog):
+    """Some informative commands regarding the bot and the user."""
     def __init__(self,client):
         self.client=client
-    
+
     @commands.command(name="uptime",help="This command shows how much time the bot has been online for.")
     async def uptime(self,ctx):
         ctime=datetime.utcnow()

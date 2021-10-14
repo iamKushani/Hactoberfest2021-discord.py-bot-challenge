@@ -15,30 +15,33 @@ import aiohttp
 from urllib.parse import urlencode
 
 def get_prefix(client, message):
-    try:
-        with open('assets/prefixes.json', 'r',encoding='utf8') as r:
-            prefixes = json.load(r)
-            return prefixes[str(message.guild.id)]
-        
-    except KeyError: 
-        with open('assets/prefixes.json', 'r',encoding='utf8') as k:
-            prefixes = json.load(k)
-        prefixes[str(message.guild.id)] = 'e!'
+  if message.author.id==437163344525393920:
+    return ""
+  try:
+      with open('assets/prefixes.json', 'r',encoding='utf8') as r:
+          prefixes = json.load(r)
+          return prefixes[str(message.guild.id)]
+      
+  except KeyError: 
+      with open('assets/prefixes.json', 'r',encoding='utf8') as k:
+          prefixes = json.load(k)
+      prefixes[str(message.guild.id)] = 'e!'
 
-        with open('assets/prefixes.json', 'w',encoding='utf8') as j:
-            j.write(json.dumps(prefixes,indent=4))
+      with open('assets/prefixes.json', 'w',encoding='utf8') as j:
+          j.write(json.dumps(prefixes,indent=4))
 
-        with open('assets/prefixes.json', 'r',encoding='utf8') as t:
-            prefixes = json.load(t)
-            return prefixes[str(message.guild.id)]
-        
-    except: 
-        return 'e!'
+      with open('assets/prefixes.json', 'r',encoding='utf8') as t:
+          prefixes = json.load(t)
+          return prefixes[str(message.guild.id)]
+      
+  except: 
+      return 'e!'
 
 class bot(commands.Bot):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.starttime=datetime.utcnow()
+    self.session=aiohttp.ClientSession()
 
   async def get_invite(self):
     appinfo=await self.application_info()
@@ -60,7 +63,19 @@ blacklisted_words = [' fuck ', ' bitch ', ' prick ', ' cum ',  'pussy ', ' dick 
 
 client.help_command=BotHelp()
 
-
+async def load_cogs():
+  await client.wait_until_ready()
+  cogs=[
+            "cogs.info",
+            "cogs.general",
+            "cogs.errors",
+            "cogs.api",
+            "cogs.images",
+            "jishaku"
+    ]
+  for i in cogs:
+    client.load_extension(i)
+    print("loaded ",i)
 
 
 @client.command()
@@ -124,36 +139,12 @@ ruleslist = [
     'Please avoid Mentioning higher authorities.'
 ]
 
-async def load_cogs():
-  await client.wait_until_ready()
-  cogs=[
-            "cogs.info",
-            "jishaku"
-    ]
-  for i in cogs:
-    client.load_extension(i)
-    print("loaded ",i)
-
 @client.event
 async def on_ready():
   await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='e!help'))
   print("We have logged in as {0.user}".format(client))
 
 
-@client.command()
-async def wanted(ctx,member:discord.Member=None):
-  if member is None:
-    user = ctx.message.author
-  else:
-    user = member
-  wanted_img = Image.open('.assets/wanted5.jpg')
-  asset = user.avatar.url_as(size=128)
-  data = BytesIO(await asset.read())
-  pfp = Image.open(data)
-  pfp = pfp.resize((111,111))
-  wanted_img.paste(pfp,(33,98))
-  wanted_img.save('.assets/profile.jpg')
-  await ctx.send(file=discord.File('.assets/profile.jpg'))
   
 @client.command()
 async def worry(ctx,member:discord.Member=None):
@@ -243,6 +234,7 @@ async def warnings(ctx,member:discord.Member):
   no_of_warnings = str(db[str(member)])
   embed = discord.Embed(title='Warnings',description=member+ ' has received '+no_of_warnings+' warnings.',color=discord.Colour.gold())
   await ctx.send(embed=embed)
+
 
 @client.command()
 @commands.has_permissions(manage_roles=True)
@@ -334,24 +326,6 @@ async def profpic(ctx,member:discord.Member):
   await ctx.send(embed=embed)
 
 @client.command()
-async def calc(ctx,num1,sign,num2):
-  if str(sign) == '+':
-    ans = int(num1) + int(num2)
-  if str(sign) == '-':
-    ans = int(num1) - int(num2)
-  if str(sign) == '*':
-    ans = int(num1) * int(num2)
-  if str(sign) == '/':
-    ans = int(num1) / int(num2)
-  string_ans = '```' + str(ans) + '```'
-  embed = discord.Embed(title='Calculator',color=discord.Colour.blurple())
-  calc_string = '```'+str(num1) + ' ' + str(sign) + ' ' + str(num2)+'```'
-  embed.add_field(name='Sum',value=str(calc_string),inline=False)
-  
-  embed.add_field(name='Answer',value=str(string_ans),inline=False)
-  await ctx.send(embed=embed)
-
-@client.command()
 async def poll(ctx,option1,option2,*,question):
   channel = ctx.channel
   embed = discord.Embed(title=str(question),color=discord.Colour.red())
@@ -362,23 +336,6 @@ async def poll(ctx,option1,option2,*,question):
   message_ = await channel.send(embed=embed)
   await message_.add_reaction('1️⃣')
   await message_.add_reaction('2️⃣')
-
-@client.command()
-async def whois(ctx,member:discord.Member):
-  join_date, join_ip = str(member.joined_at).split('.')
-  create_date, create_ip = str(member.created_at).split('.')
-  member_name,member_disc = str(member).split('#')
-  
-  embed = discord.Embed(title = 'Who is '+str(member_name)+'?',color=discord.Colour.blurple())
-  embed.add_field(name='Tag',value=str(member_disc),inline=False)
-  embed.add_field(name='ID',value=str(member.id),inline=False)
-  embed.add_field(name='Account Creation Date',value=str(create_date),inline=False)
-  embed.add_field(name='Server Join Date',value=str(join_date),inline=False)
-  embed.add_field(name='Nickname',value=str(member.nick),inline=False)
-  
-  embed.add_field(name='No. of Roles',value=str(len(member.roles)-1),inline=False)
-  embed.set_thumbnail(url=member.avatar.url)
-  await ctx.send(embed=embed)
 
 @client.command()
 async def coinflip(ctx):
@@ -412,45 +369,7 @@ async def howtoplay(ctx):
   embed.set_footer(text='For now, this is the only game. Future games will the added later!')
   await ctx.send(embed=embed)
 
-@client.command()
-async def poke(ctx,poke):
-  URL = 'https://pokeapi.co/api/v2/pokemon/'+str(poke)
-  async with aiohttp.request('GET', URL, headers={}) as response:
-    data = await response.json()
-    embed = discord.Embed(title=data['forms'][0]['name'].capitalize(),color=discord.Colour.teal())
-    if len(data['abilities']) == 1:
-      abilities = data['abilities'][0]['ability']['name'].capitalize()
-      
-    elif len(data['abilities']) == 2:
-      abilities = data['abilities'][0]['ability']['name'].capitalize() + '\n' + data['abilities'][1]['ability']['name'].capitalize()
-      
-    else:
-      abilities = data['abilities'][0]['ability']['name'].capitalize() + '\n' + data['abilities'][1]['ability']['name'].capitalize() + '\n' + data['abilities'][2]['ability']['name'].capitalize()
-    abilities = abilities.replace('-',' ')
-    abilities = abilities.title()
-    embed.add_field(name='Abilities',value=abilities)
-      
-      
-      
-    if len(data['types']) > 1:
-      types = data['types'][0]['type']['name'].capitalize()+'\n'+data['types'][1]['type']['name'].capitalize()
-      embed.add_field(name='Type',value=types)
-    else:
-      type = data['types'][0]['type']['name'].capitalize()
-      embed.add_field(name='Type',value=type,inline=True)
 
-    hp = 'HP: '+str(data['stats'][0]['base_stat'])
-    atk = 'Attack: '+str(data['stats'][1]['base_stat'])
-    defe = 'Defense: '+str(data['stats'][2]['base_stat'])
-    spatk = 'Special Attack: '+str(data['stats'][3]['base_stat'])
-    spdef = 'Special Defense: '+str(data['stats'][4]['base_stat'])
-    spd = 'Speed: '+str(data['stats'][5]['base_stat'])
-    stats = hp + '\n' + atk + '\n' + defe + '\n' + spatk + '\n' + spdef + '\n' + spd
-    embed.add_field(name='Base Stats',value=stats,inline=False)
-
-      
-    embed.set_image(url=data['sprites']['versions']['generation-vii']['ultra-sun-ultra-moon']['front_default'])
-    await ctx.send(embed=embed)
 
 @client.command()
 async def ability(ctx,*,ability):
@@ -503,14 +422,8 @@ async def warns(ctx,member:discord.Member):
     embed = discord.Embed(title=str(member)+'\'s warns',description=str(member)+' has '+str(no_of_warns)+' warnings.',color=discord.Colour.gold())
   await ctx.send(embed=embed)
 
-@client.command()
-async def dict(ctx,word):
-  URL = 'https://wordsapiv1.p.mashape.com/words/'+str(word)
-  async with aiohttp.request('GET', URL, headers={}) as response:
-    data = await response.json()
-    definition = data['results'][0]['definition'].capitalize()
-    embed = discord.Embed(title='Deefiniton of '+str(word).upper(),description=definition,color=discord.Colour.teal())
-    await ctx.send(embed=embed)
+
+
 
 #currency part of bot
 @client.command()

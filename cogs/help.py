@@ -19,7 +19,6 @@ class MyMenuPages(ui.View, menus.MenuPages):
         self.ctx = None
         self.message = None
         self.delete_message_after = delete_message_after
-        self.add_button(LinkButton("Bot invite",))
 
     async def start(self, ctx, *, channel=None, wait=False):
         await self._source._prepare_once()
@@ -51,7 +50,7 @@ class MyMenuPages(ui.View, menus.MenuPages):
 
     @ui.button(emoji='▶️', style=discord.ButtonStyle.blurple)
     async def next_page(self, button, interaction):
-        await self.show_checked_page(self.current_page + 1)
+        await self.show_page(self.current_page + 1)
 
     @ui.button(emoji='⏩', style=discord.ButtonStyle.blurple)
     async def last_page(self, button, interaction):
@@ -70,7 +69,7 @@ class HelpPageSource(menus.ListPageSource):
     async def format_page(self, menu, entries):
         page = menu.current_page
         max_page = self.get_max_pages()
-        starting_number = page * self.per_page + 1
+        starting_number = page * self.per_page +1
         iterator = starmap(self.format_command_help, enumerate(entries, start=starting_number))
         page_content = "\n".join(iterator)
         embed = discord.Embed(
@@ -79,7 +78,8 @@ class HelpPageSource(menus.ListPageSource):
             color=discord.Colour.random()
         )
         author = menu.ctx.author
-        embed.set_footer(text=f"Requested by {author}", icon_url=author.avatar.url)  
+        embed.set_footer(text=f"Requested by {author}", icon_url=author.avatar.url) 
+        embed.set_thumbnail(url=menu.ctx.me.avatar.url) 
         return embed
 
 class BotHelp(commands.MinimalHelpCommand):
@@ -88,7 +88,7 @@ class BotHelp(commands.MinimalHelpCommand):
 
     def get_command_brief(self, command):
         return command.help or "No help found for this."
-    
+
     async def send_bot_help(self, mapping):
         all_commands = list(chain.from_iterable(mapping.values()))
         formatter = HelpPageSource(all_commands, self)
@@ -97,7 +97,7 @@ class BotHelp(commands.MinimalHelpCommand):
     
     async def send_command_help(self, command):
         embed = discord.Embed(title=self.get_command_signature(command))
-        embed.add_field(name="Help", value=command.help)
+        embed.add_field(name="Help", value=command.help or "No help found for this,sorry")
         alias = command.aliases
         if alias:
             embed.add_field(name="Aliases", value=", ".join(alias), inline=False)
@@ -105,22 +105,13 @@ class BotHelp(commands.MinimalHelpCommand):
         channel = self.get_destination()
         view=Delete(user=self.context.author)
         await channel.send(embed=embed,view=view)
-
-    async def send_help_embed(self, title, description, commands): 
-        embed = HelpEmbed(title=title, description=description or "No help found for this.")
-
-        if filtered_commands := await self.filter_commands(commands):
-            for command in filtered_commands:
-                embed.add_field(name=self.get_command_signature(command), value=command.help or "No help found for this.")
-           
-        await self.context.send(embed=embed,view=Delete(self.context.author))
-
+    
     async def send_group_help(self, group):
         title = self.get_command_signature(group)
         await self.send_help_embed(title, group.help, group.commands)
 
     async def send_cog_help(self, cog):
-        title = cog.qualified_name or "No"
+        title = cog.qualified_name or "No name"
         await self.send_help_embed(f'{title} Category', cog.description, cog.get_commands())
 
     async def send_error_message(self, error):
